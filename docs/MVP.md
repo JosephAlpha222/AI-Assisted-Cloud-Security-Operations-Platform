@@ -54,3 +54,14 @@ The first working version will:
 8. Use AI to explain suspicious events
 9. Recommend response actions
 10. Record analyst decisions
+
+## Supporting Documentation
+
+```text
+docs/
+├── MVP.md
+├── Architecture document
+├── Threat model
+├── Roadmap
+└── Git commit/push
+```
