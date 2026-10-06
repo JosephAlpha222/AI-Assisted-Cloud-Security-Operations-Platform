@@ -55,13 +55,38 @@ The first working version will:
 9. Recommend response actions
 10. Record analyst decisions
 
-## Supporting Documentation
+## Project Structure
 
 ```text
-docs/
-├── MVP.md
-├── Architecture document
-├── Threat model
-├── Roadmap
-└── Git commit/push
+ai-assisted-cloud-security-operations-platform/
+│
+├── README.md
+│
+├── docs/
+│   ├── MVP.md
+│   ├── architecture.md
+│   ├── threat-model.md
+│   └── roadmap.md
+│
+├── backend/
+│
+├── frontend/
+│
+├── detection/
+│
+├── ingestion/
+│
+├── ai/
+│
+├── response/
+│
+├── data/
+│
+├── tests/
+│
+├── infrastructure/
+│
+├── scripts/
+│
+└── .gitignore
 ```
