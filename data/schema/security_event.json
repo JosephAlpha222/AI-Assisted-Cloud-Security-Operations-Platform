@@ -1,0 +1,25 @@
+{
+  "event_id": "evt-000001",
+  "timestamp": "2026-10-06T08:00:00Z",
+  "cloud": "aws",
+  "account_id": "123456789012",
+  "region": "eu-north-1",
+  "service": "iam",
+  "event_type": "identity_activity",
+  "action": "CreateAccessKey",
+  "user": {
+    "id": "example-user",
+    "type": "IAMUser"
+  },
+  "source": {
+    "ip": "203.0.113.10"
+  },
+  "resource": {
+    "type": "iam-user",
+    "id": "example-user"
+  },
+  "result": "success",
+  "risk_score": 0,
+  "severity": "low",
+  "detection": null
+}

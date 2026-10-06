@@ -1,0 +1,15 @@
+name: Suspicious IAM Activity
+
+description: Detect suspicious IAM credential and privilege activity
+
+severity: high
+
+actions:
+  - CreateAccessKey
+  - CreateLoginProfile
+  - AttachUserPolicy
+  - PutUserPolicy
+  - AddUserToGroup
+
+response:
+  type: investigate

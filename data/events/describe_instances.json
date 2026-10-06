@@ -1,0 +1,25 @@
+{
+  "event_id": "evt-000002",
+  "timestamp": "2026-10-06T08:05:00Z",
+  "cloud": "aws",
+  "account_id": "123456789012",
+  "region": "eu-north-1",
+  "service": "ec2",
+  "event_type": "compute_activity",
+  "action": "DescribeInstances",
+  "user": {
+    "id": "test-user",
+    "type": "IAMUser"
+  },
+  "source": {
+    "ip": "203.0.113.10"
+  },
+  "resource": {
+    "type": "ec2",
+    "id": "example"
+  },
+  "result": "success",
+  "risk_score": 0,
+  "severity": "low",
+  "detection": null
+}
