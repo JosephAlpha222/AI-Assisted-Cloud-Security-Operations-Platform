@@ -31,6 +31,14 @@ def determine_severity(event: dict) -> str:
 
 
 def normalize_cloudtrail_event(event: dict) -> SecurityEvent:
+    if not isinstance(event, dict):
+        raise ValueError("Event must be a dictionary")
+
+    for field in ("user", "source", "resource"):
+        value = event.get(field, {})
+        if not isinstance(value, dict):
+            raise ValueError(f"{field} must be a dictionary")
+
     user = event.get("user", {})
     source = event.get("source", {})
     resource = event.get("resource", {})
