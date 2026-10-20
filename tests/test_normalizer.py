@@ -89,3 +89,48 @@ def test_non_dictionary_resource_is_rejected():
 
     with pytest.raises(ValueError, match="resource must be a dictionary"):
         normalize_cloudtrail_event(event)
+
+
+def test_security_group_ingress_change_is_high_risk():
+    assert determine_severity(
+        {"action": "AuthorizeSecurityGroupIngress"}
+    ) == "high"
+
+
+def test_s3_bucket_policy_change_is_high_risk():
+    assert determine_severity(
+        {"action": "PutBucketPolicy"}
+    ) == "high"
+
+
+def test_failed_console_login_is_medium_risk():
+    event = {"action": "ConsoleLogin", "result": "failure"}
+    assert determine_severity(event) == "medium"
+
+
+def test_successful_console_login_defaults_to_low_risk():
+    event = {"action": "ConsoleLogin", "result": "success"}
+    assert determine_severity(event) == "low"
+
+
+def test_non_string_action_is_rejected():
+    with pytest.raises(ValueError, match="action must be a string"):
+        normalize_cloudtrail_event({"action": 123})
+
+
+def test_additional_cloudtrail_metadata_is_preserved():
+    event = {
+        "event_id": "test-003",
+        "action": "DescribeInstances",
+        "event_source": "ec2.amazonaws.com",
+        "event_category": "Management",
+        "user_agent": "aws-cli/2",
+        "error_code": None,
+    }
+
+    normalized = normalize_cloudtrail_event(event)
+
+    assert normalized.metadata["event_source"] == "ec2.amazonaws.com"
+    assert normalized.metadata["event_category"] == "Management"
+    assert normalized.metadata["user_agent"] == "aws-cli/2"
+    assert normalized.metadata["error_code"] is None
