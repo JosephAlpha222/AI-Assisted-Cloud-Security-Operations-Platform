@@ -3,15 +3,8 @@ import json
 import yaml
 
 
-def load_event(path):
-    with open(path, "r", encoding="utf-8") as file:
-        return json.load(file)
-
-
-def load_rule(path):
-    with open(path, "r", encoding="utf-8") as file:
-        rule = yaml.safe_load(file)
-
+def validate_rule(rule):
+    """Validate the structure of a detection rule."""
     if not isinstance(rule, dict):
         raise ValueError("Detection rule must be a YAML mapping.")
 
@@ -41,23 +34,31 @@ def load_rule(path):
     return rule
 
 
+def load_event(path):
+    with open(path, "r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+def load_rule(path):
+    with open(path, "r", encoding="utf-8") as file:
+        rule = yaml.safe_load(file)
+
+    return validate_rule(rule)
+
+
 def detect(event, rule):
+    """Evaluate one event against one detection rule."""
     if not isinstance(event, dict):
         raise ValueError("Event must be a dictionary.")
 
-    if not isinstance(rule, dict):
-        raise ValueError("Detection rule must be a dictionary.")
+    validate_rule(rule)
 
     action = event.get("action", "")
-    actions = rule.get("actions", [])
 
     if not isinstance(action, str):
         action = ""
 
-    if not isinstance(actions, list):
-        raise ValueError("Rule actions must be a list.")
-
-    matched = action in actions
+    matched = action in rule["actions"]
 
     if matched:
         return {
@@ -85,6 +86,25 @@ def detect(event, rule):
         "reason": f"Action '{action}' did not match the detection rule.",
         "response": {"type": "none"},
     }
+
+
+def detect_all(event, rules):
+    """Return every detection finding that matches an event."""
+    if not isinstance(event, dict):
+        raise ValueError("Event must be a dictionary.")
+
+    if not isinstance(rules, list):
+        raise ValueError("Rules must be a list.")
+
+    findings = []
+
+    for rule in rules:
+        result = detect(event, rule)
+
+        if result["detected"]:
+            findings.append(result)
+
+    return findings
 
 
 if __name__ == "__main__":

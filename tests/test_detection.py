@@ -142,3 +142,70 @@ def test_non_dictionary_event_is_rejected():
 
     with pytest.raises(ValueError, match="Event must be a dictionary"):
         detect(None, rule)
+
+
+def test_detect_all_returns_all_matching_findings():
+    from detection.engine import detect_all
+
+    event = {"action": "CreateAccessKey"}
+
+    rules = [
+        {
+            "id": "IAM-001",
+            "name": "Suspicious IAM Activity",
+            "severity": "high",
+            "actions": ["CreateAccessKey", "AttachUserPolicy"],
+        },
+        {
+            "id": "IAM-002",
+            "name": "Credential Creation Monitoring",
+            "severity": "medium",
+            "actions": ["CreateAccessKey"],
+        },
+    ]
+
+    findings = detect_all(event, rules)
+
+    assert len(findings) == 2
+    assert all(finding["detected"] for finding in findings)
+    assert findings[0]["rule_id"] == "IAM-001"
+    assert findings[1]["rule_id"] == "IAM-002"
+
+
+def test_detect_all_returns_empty_list_when_no_rules_match():
+    from detection.engine import detect_all
+
+    event = {"action": "DescribeInstances"}
+
+    rules = [
+        {
+            "id": "IAM-001",
+            "name": "Suspicious IAM Activity",
+            "severity": "high",
+            "actions": ["CreateAccessKey"],
+        }
+    ]
+
+    assert detect_all(event, rules) == []
+
+
+def test_detect_all_rejects_non_list_rules():
+    import pytest
+    from detection.engine import detect_all
+
+    with pytest.raises(ValueError, match="Rules must be a list"):
+        detect_all({"action": "CreateAccessKey"}, {})
+
+
+def test_detect_all_rejects_invalid_rule():
+    import pytest
+    from detection.engine import detect_all
+
+    invalid_rule = {
+        "name": "Invalid Rule",
+        "severity": "high",
+        "actions": [],
+    }
+
+    with pytest.raises(ValueError, match="non-empty list"):
+        detect_all({"action": "CreateAccessKey"}, [invalid_rule])
