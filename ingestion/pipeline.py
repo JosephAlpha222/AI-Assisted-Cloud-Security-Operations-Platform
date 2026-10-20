@@ -1,3 +1,4 @@
+
 import json
 from pathlib import Path
 
@@ -6,8 +7,27 @@ from ingestion.save import save_normalized_event
 
 
 def load_json_event(path: str) -> dict:
-    with open(path, "r", encoding="utf-8") as file:
-        return json.load(file)
+    try:
+        with open(path, "r", encoding="utf-8") as file:
+            event = json.load(file)
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(
+            f"Event file not found: {path}"
+        ) from exc
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            f"Invalid JSON in event file '{path}': "
+            f"{exc.msg} (line {exc.lineno}, column {exc.colno})"
+        ) from exc
+    except OSError as exc:
+        raise OSError(
+            f"Unable to read event file '{path}': {exc}"
+        ) from exc
+
+    if not isinstance(event, dict):
+        raise ValueError("Event file must contain a JSON object")
+
+    return event
 
 
 def process_aws_event(path: str) -> dict:
