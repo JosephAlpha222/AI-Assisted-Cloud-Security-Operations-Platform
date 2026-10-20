@@ -314,3 +314,44 @@ def test_run_detection_all_returns_empty_findings_for_unmatched_event(
     )
 
     assert result["detections"] == []
+
+
+def test_summarize_findings_counts_severity_levels():
+    from detection.pipeline import summarize_findings
+
+    findings = [
+        {"severity": "high"},
+        {"severity": "HIGH"},
+        {"severity": "medium"},
+        {"severity": "critical"},
+        {"severity": "custom"},
+    ]
+
+    assert summarize_findings(findings) == {
+        "status": "findings_detected",
+        "total_findings": 5,
+        "severity_counts": {
+            "high": 2,
+            "medium": 1,
+            "critical": 1,
+            "custom": 1,
+        },
+    }
+
+
+def test_summarize_findings_handles_empty_list():
+    from detection.pipeline import summarize_findings
+
+    assert summarize_findings([]) == {
+        "status": "no_findings",
+        "total_findings": 0,
+        "severity_counts": {},
+    }
+
+
+def test_summarize_findings_rejects_invalid_finding():
+    import pytest
+    from detection.pipeline import summarize_findings
+
+    with pytest.raises(ValueError, match="non-empty severity"):
+        summarize_findings([{"severity": " "}])
