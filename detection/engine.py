@@ -1,4 +1,4 @@
-
+from pathlib import Path
 import json
 import yaml
 
@@ -45,6 +45,37 @@ def load_rule(path):
 
     return validate_rule(rule)
 
+def load_rules(directory):
+    """Load and validate every YAML detection rule in a directory."""
+    rules_directory = Path(directory)
+
+    if not rules_directory.is_dir():
+        raise ValueError(
+            f"Detection rules directory does not exist: "
+            f"{rules_directory}"
+        )
+
+    rule_paths = sorted(
+        set(rules_directory.glob("*.yaml"))
+        | set(rules_directory.glob("*.yml"))
+    )
+
+    if not rule_paths:
+        raise ValueError(
+            f"No YAML detection rules found in: {rules_directory}"
+        )
+
+    rules = []
+
+    for path in rule_paths:
+        try:
+            rules.append(load_rule(path))
+        except (OSError, yaml.YAMLError, ValueError) as exc:
+            raise ValueError(
+                f"Failed to load detection rule '{path}': {exc}"
+            ) from exc
+
+    return rules
 
 def detect(event, rule):
     """Evaluate one event against one detection rule."""

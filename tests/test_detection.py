@@ -209,3 +209,108 @@ def test_detect_all_rejects_invalid_rule():
 
     with pytest.raises(ValueError, match="non-empty list"):
         detect_all({"action": "CreateAccessKey"}, [invalid_rule])
+
+
+def test_load_rules_loads_yaml_and_yml_files(tmp_path):
+    from detection.engine import load_rules
+
+    (tmp_path / "first.yaml").write_text(
+        "name: First Rule\n"
+        "severity: high\n"
+        "actions:\n"
+        "  - CreateAccessKey\n",
+        encoding="utf-8",
+    )
+
+    (tmp_path / "second.yml").write_text(
+        "name: Second Rule\n"
+        "severity: medium\n"
+        "actions:\n"
+        "  - PutUserPolicy\n",
+        encoding="utf-8",
+    )
+
+    rules = load_rules(tmp_path)
+
+    assert len(rules) == 2
+    assert [rule["name"] for rule in rules] == [
+        "First Rule",
+        "Second Rule",
+    ]
+
+
+def test_load_rules_rejects_empty_directory(tmp_path):
+    import pytest
+    from detection.engine import load_rules
+
+    with pytest.raises(ValueError, match="No YAML detection rules"):
+        load_rules(tmp_path)
+
+
+def test_load_rules_reports_invalid_rule_filename(tmp_path):
+    import pytest
+    from detection.engine import load_rules
+
+    (tmp_path / "broken.yaml").write_text(
+        "name: Broken Rule\n"
+        "severity: high\n"
+        "actions: []\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="broken.yaml"):
+        load_rules(tmp_path)
+
+
+def test_run_detection_all_returns_multiple_findings(tmp_path):
+    from detection.pipeline import run_detection_all
+
+    (tmp_path / "first.yaml").write_text(
+        "id: IAM-101\n"
+        "name: IAM Credential Creation\n"
+        "severity: high\n"
+        "actions:\n"
+        "  - CreateAccessKey\n",
+        encoding="utf-8",
+    )
+
+    (tmp_path / "second.yaml").write_text(
+        "id: IAM-102\n"
+        "name: IAM Activity Monitoring\n"
+        "severity: medium\n"
+        "actions:\n"
+        "  - CreateAccessKey\n",
+        encoding="utf-8",
+    )
+
+    result = run_detection_all(
+        "data/events/iam_create_access_key.json",
+        str(tmp_path),
+    )
+
+    assert len(result["detections"]) == 2
+    assert all(item["detected"] for item in result["detections"])
+    assert {
+        item["rule_id"] for item in result["detections"]
+    } == {"IAM-101", "IAM-102"}
+
+
+def test_run_detection_all_returns_empty_findings_for_unmatched_event(
+    tmp_path,
+):
+    from detection.pipeline import run_detection_all
+
+    (tmp_path / "iam.yaml").write_text(
+        "name: IAM Credential Creation\n"
+        "severity: high\n"
+        "actions:\n"
+        "  - CreateAccessKey\n",
+        encoding="utf-8",
+    )
+
+    result = run_detection_all(
+        "data/events/describe_instances.json",
+        str(tmp_path),
+    )
+
+    assert result["detections"] == []
